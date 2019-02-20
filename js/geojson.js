@@ -13,28 +13,20 @@ function createMap(){
     id: 'mapbox.streets',
     accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
     }).addTo(map);
+
+    //call getData function
+    getData(map);
 };
-
-
-////GOAL: Proportional symbols representing attribute values of mapped features
-//STEPS:
-//1. Create the Leaflet map--done (in createMap())
-//2. Import GeoJSON data--done (in getData())
-//3. Add circle markers for point features to the map--done (in AJAX callback)
-//4. Determine which attribute to visualize with proportional symbols
-//5. For each feature, determine its value for the selected attribute
-//6. Give each feature's circle marker a radius based on its attribute value
-
-// function to add popup
+//function to attach popups to each mapped feature
 function onEachFeature(feature, layer) {
-    //create html string with all properties
+    //no property named popupContent; instead, create html string with all properties
     var popupContent = "";
     if (feature.properties) {
         //loop to add feature property names and values to html string
         for (var property in feature.properties){
             popupContent += "<p>" + property + ": " + feature.properties[property] + "</p>";
         }
-       layer.bindPopup(popupContent);
+        layer.bindPopup(popupContent);
     };
 };
 
@@ -56,8 +48,8 @@ function getData(map){
             L.geoJson(response, {
                 pointToLayer: function (feature, latlng){
                     return L.circleMarker(latlng, geojsonMarkerOptions);},
-                onEachFeature: onEachFeature}
-            ).addTo(map);
+                onEachFeature: onEachFeature
+            }).addTo(map);
         }
     });
 };
