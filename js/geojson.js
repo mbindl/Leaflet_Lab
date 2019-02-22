@@ -17,39 +17,83 @@ function createMap(){
     //call getData function
     getData(map);
 };
-//function to attach popups to each mapped feature
-function onEachFeature(feature, layer) {
-    //no property named popupContent; instead, create html string with all properties
-    var popupContent = "";
-    if (feature.properties) {
-        //loop to add feature property names and values to html string
-        for (var property in feature.properties){
-            popupContent += "<p>" + property + ": " + feature.properties[property] + "</p>";
-        }
-        layer.bindPopup(popupContent);
+
+//calculate the radius of each proportional symbol
+function calcPropRadius(attValue) {
+    //scale factor to adjust symbol size evenly
+    var scaleFactor = 50;
+    //area based on attribute value and scale factor
+    var area = attValue * scaleFactor;
+    //radius calculated based on area
+    var radius = Math.sqrt(area/Math.PI);
+
+    return radius;
+};
+
+function pointToLayer(feature, latlng){
+    //Determine which attribute to visualize with proportional symbols
+    var attribute = "Pop_2015";
+
+    //create marker options
+    var geojsonMarkerOptions = {
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
     };
+
+    //For each feature, determine its value for the selected attribute
+    var attValue = Number(feature.properties[attribute]);
+
+    //Give each feature's circle marker a radius based on its attribute value
+    geojsonMarkerOptions.radius = calcPropRadius(attValue);
+
+    //create circle marker layer
+    var layer = L.circleMarker(latlng, geojsonMarkerOptions);
+
+    //build popup content string
+    var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p>";
+
+    //add formatted attribute to popup content string
+    var year = attribute.split("_")[1];
+    popupContent += "<p><b>Population in " + year + ":</b> " + feature.properties[attribute] + " million</p>";
+    
+    //bind the popup to the circle marker
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-geojsonMarkerOptions.radius)
+    });
+    
+    //event listeners to open popup on hover
+    layer.on({
+        mouseover: function(){
+            this.openPopup();
+        },
+        mouseout: function(){
+            this.closePopup();
+        },
+         click: function(){
+             $("#panel").html(popupContent);
+        }
+    });
+    //return the circle marker to the L.geoJson pointToLayer option
+    return layer;
+};
+
+// Add circle markers for point features to the map
+function createPropSymbols(data, map){
+    //create a Leaflet GeoJSON layer and add it to the map
+    L.geoJson(data, {
+        pointToLayer: pointToLayer
+    }).addTo(map);
 };
 
 //function to retrieve the data and place it on the map
 function getData(map){
-        $.ajax("data/MegaCities.geojson", {
+    $.ajax("data/MegaCities.geojson", {
         dataType: "json",
         success: function(response){
-            //create marker options
-            var geojsonMarkerOptions = {
-                radius: 8,
-                fillColor: "#ff7800",
-                color: "#000",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            };
-            //create a Leaflet GeoJSON layer and add it to the map
-            L.geoJson(response, {
-                pointToLayer: function (feature, latlng){
-                    return L.circleMarker(latlng, geojsonMarkerOptions);},
-                onEachFeature: onEachFeature
-            }).addTo(map);
+            createPropSymbols(response, map);
         }
     });
 };

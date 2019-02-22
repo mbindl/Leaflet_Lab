@@ -11,3 +11,14 @@ body {
 	 height: 960px;
 	 margin: 15px auto;
 	}
+
+    #panel {
+    width: 16%;
+    padding: 20px;
+    display: inline-block;
+    vertical-align: top;
+    }
+
+.leaflet-popup-content p {
+    margin: 0.2em 0;
+}
