@@ -1,4 +1,4 @@
-body {
+    body {
 	font-family: sans-serif;
 	}
 	
@@ -7,33 +7,35 @@ body {
 	 margin: 15px auto;
 	}
 
-	#map {
-	 height: 960px;
-	 margin: 15px auto;
-	}
-
-    #panel {
-    width: 26%;
-    padding: 20px;
+    #map {
+    height: 940px;
+    width: 100%;
     display: inline-block;
-    vertical-align: top;
+}
+
+
+    .sequence-control-container {
+    width: 350px;
+    height: 30px;
+    background-color: rgba(255,255,255,0.8);
+    padding: 10px;
+    line-height: 45px;
     text-align: center;
-    line-height: 42px;
+    border: solid gray 1px;
     }
 
     .range-slider {
-    width: 50%;
+    width: 200px;
     }
 
     #forward {
     float: right;
-    resize: 100px;
     }
 
     #reverse {
     float: left;
     }
 
-.leaflet-popup-content p {
+    .leaflet-popup-content p {
     margin: 0.2em 0;
-}
+    }

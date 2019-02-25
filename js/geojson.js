@@ -2,8 +2,8 @@
 function createMap(){
     //create the map
     var map = L.map('map', {
-        center: [15, 110],
-        zoom: 3
+        center: [15, 0],
+        zoom: 2
     });
 
     //add base tilelayer
@@ -64,12 +64,34 @@ function processData(data){
 
 // Create new sequence controls
 function createSequenceControls(map, attributes){
-    //create range input element (slider)
-    $('#panel').append('<input class="range-slider" type="range">');
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
 
-    // Add skip buttons
-    $('#panel').append('<button class="skip" id="reverse"></button>');
-    $('#panel').append('<button class="skip" id="forward"></button>');
+        onAdd: function (map) {
+            // create the control container div with a particular class name
+            var container = L.DomUtil.create('div', 'sequence-control-container');
+
+            // ... initialize other DOM elements, add listeners, etc.
+            //create range input element (slider)
+            $(container).append('<input class="range-slider" type="range">');
+
+            //add skip buttons
+            $(container).append('<button class="skip" id="reverse" title="Reverse">Reverse</button>');
+            $(container).append('<button class="skip" id="forward" title="Forward">Skip</button>');
+            //kill any mouse event listeners on the map
+            $(container).on('mousedown dblclick', function(e){
+                L.DomEvent.stopPropagation(e);
+                L.DomEvent.disableClickPropagation(container);
+            });
+            
+            return container;
+        }
+    });
+
+    map.addControl(new SequenceControl());
+
     // replace button content with images
     $('#reverse').html('<img src="img/reverse.png">');
     $('#forward').html('<img src="img/forward.png">');
