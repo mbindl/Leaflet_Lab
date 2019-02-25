@@ -17,7 +17,99 @@ function createMap(){
     //call getData function
     getData(map);
 };
+//Resize proportional symbols according to new attribute values
+function updatePropSymbols(map, attribute){
+    map.eachLayer(function(layer){
+        //
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
 
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>City:</b> " + props.City + "</p>";
+
+            //add formatted attribute to panel content string
+            var year = attribute.split("_")[1];
+            popupContent += "<p><b>Population in " + year + ":</b> " + props[attribute] + " million</p>";
+
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius)
+            });
+        };
+    });
+};
+//Build an attributes array from the data
+function processData(data){
+    //empty array to hold attributes
+    var attributes = [];
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties){
+        //only take attributes with population values
+        if (attribute.indexOf("Pop") > -1){
+            attributes.push(attribute);
+        };
+    };
+    return attributes;
+};
+
+
+// Create new sequence controls
+function createSequenceControls(map){
+    //create range input element (slider)
+    $('#panel').append('<input class="range-slider" type="range">');
+
+    // Add skip buttons
+    $('#panel').append('<button class="skip" id="reverse"></button>');
+    $('#panel').append('<button class="skip" id="forward"></button>');
+    // replace button content with images
+    $('#reverse').html('<img src="img/reverse.png">');
+    $('#forward').html('<img src="img/forward.png">');
+    
+    // set slider attributes
+    $('.range-slider').attr({
+        max: 6,
+        min: 0,
+        value: 0,
+        step: 1
+    
+    });
+
+    //Click listener for buttons
+    $('.skip').click(function(){
+        //get the old index value
+        var index = $('.range-slider').val();
+
+        //Increment or decrement depending on button clicked
+        if ($(this).attr('id') == 'forward'){
+            index++;
+            //If past the last attribute, wrap around to first attribute
+            index = index > 6 ? 0 : index;
+        } else if ($(this).attr('id') == 'reverse'){
+            index--;
+            //If past the first attribute, wrap around to last attribute
+            index = index < 0 ? 6 : index;
+        };
+
+        //Update slider
+        $('.range-slider').val(index);
+        updatePropSymbols(map, attributes[index]);
+    });
+    //input listener for slider
+    $('.range-slider').on('input', function(){
+        //Get the new index value
+        var index = $(this).val();
+        updatePropSymbols(map, attributes[index]);
+    });
+};
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
@@ -30,9 +122,9 @@ function calcPropRadius(attValue) {
     return radius;
 };
 
-function pointToLayer(feature, latlng){
+function pointToLayer(feature, latlng, attributes){
     //Determine which attribute to visualize with proportional symbols
-    var attribute = "Pop_2015";
+    var attribute = attributes[0];
 
     //create marker options
     var geojsonMarkerOptions = {
@@ -81,10 +173,12 @@ function pointToLayer(feature, latlng){
 };
 
 // Add circle markers for point features to the map
-function createPropSymbols(data, map){
+function createPropSymbols(data, map, attributes){
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
-        pointToLayer: pointToLayer
+        pointToLayer: function(feature, latlng){
+            return pointToLayer(feature, latlng, attributes);
+        }
     }).addTo(map);
 };
 
@@ -93,7 +187,11 @@ function getData(map){
     $.ajax("data/MegaCities.geojson", {
         dataType: "json",
         success: function(response){
-            createPropSymbols(response, map);
+           
+           //create an attributes array
+            var attributes = processData(response);
+            createPropSymbols(response, map, attributes);
+            createSequenceControls(map, attributes)
         }
     });
 };
