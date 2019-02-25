@@ -63,7 +63,7 @@ function processData(data){
 
 
 // Create new sequence controls
-function createSequenceControls(map){
+function createSequenceControls(map, attributes){
     //create range input element (slider)
     $('#panel').append('<input class="range-slider" type="range">');
 

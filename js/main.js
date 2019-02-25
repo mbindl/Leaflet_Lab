@@ -17,8 +17,33 @@ function createMap(){
     //call getData function
     getData(map);
 };
+//Resize proportional symbols according to new attribute values
+function updatePropSymbols(map, attribute){
+    map.eachLayer(function(layer){
+        //
+        if (layer.feature && layer.feature.properties[attribute]){
+            //access feature properties
+            var props = layer.feature.properties;
 
-//Above Example 3.8...Step 3: build an attributes array from the data
+            //update each feature's radius based on new attribute values
+            var radius = calcPropRadius(props[attribute]);
+            layer.setRadius(radius);
+
+            //add city to popup content string
+            var popupContent = "<p><b>City:</b> " + props.City + "</p>";
+
+            //add formatted attribute to panel content string
+            var year = attribute.split("_")[1];
+            popupContent += "<p><b>Population in " + year + ":</b> " + props[attribute] + " million</p>";
+
+            //replace the layer popup
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0,-radius)
+            });
+        };
+    });
+};
+//Build an attributes array from the data
 function processData(data){
     //empty array to hold attributes
     var attributes = [];
@@ -33,18 +58,15 @@ function processData(data){
             attributes.push(attribute);
         };
     };
-
-    //check result
-    console.log(attributes);
-
     return attributes;
 };
 
 
 // Create new sequence controls
-function createSequenceControls(map){
+function createSequenceControls(map, attributes){
     //create range input element (slider)
     $('#panel').append('<input class="range-slider" type="range">');
+
     // Add skip buttons
     $('#panel').append('<button class="skip" id="reverse"></button>');
     $('#panel').append('<button class="skip" id="forward"></button>');
@@ -59,6 +81,33 @@ function createSequenceControls(map){
         value: 0,
         step: 1
     
+    });
+
+    //Click listener for buttons
+    $('.skip').click(function(){
+        //get the old index value
+        var index = $('.range-slider').val();
+
+        //Increment or decrement depending on button clicked
+        if ($(this).attr('id') == 'forward'){
+            index++;
+            //If past the last attribute, wrap around to first attribute
+            index = index > 6 ? 0 : index;
+        } else if ($(this).attr('id') == 'reverse'){
+            index--;
+            //If past the first attribute, wrap around to last attribute
+            index = index < 0 ? 6 : index;
+        };
+
+        //Update slider
+        $('.range-slider').val(index);
+        updatePropSymbols(map, attributes[index]);
+    });
+    //input listener for slider
+    $('.range-slider').on('input', function(){
+        //Get the new index value
+        var index = $(this).val();
+        updatePropSymbols(map, attributes[index]);
     });
 };
 //calculate the radius of each proportional symbol
