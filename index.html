@@ -3,7 +3,11 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Tahoe Build Out</title>	
-	    <!--stylesheets-->
+	    
+        <link href="assets/mb_icon.ico" rel="icon" >
+        <!--stylesheets-->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/bootstrap.css" rel="stylesheet">
         <link rel="stylesheet" href="lib/leaflet.css">
 		<link rel="stylesheet" href="css/style.css">
 		<!--[if IE]>
@@ -12,6 +16,24 @@
 		<![endif]-->
 	</head>
 	<body>
+        <nav class="navbar navbar-dark navbar-expand-sm" style="background-color: #6c83b5;">
+            <div class="container">
+
+                <a href="../index.html" class="navbar-brand">MTB</a>
+    
+                <button class = "navbar-toggler" type="button" data-toggle ="collapse" data-target="#myToggle" aria-controls="myToggle" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+      
+                <div class = "collapse navbar-collapse" id="myToggle">
+                    <div class="navbar-nav ml-auto">
+                        <a class="nav-item nav-link align-right" href="http://www.masonbindl.com/about.html">About</a>
+                        <a class="nav-item nav-link align-right" href="http://www.masonbindl.com/resume.html">Resume</a>
+                        <a class="nav-item nav-link align-right" href="#contact">Contact</a>
+                    </div><!-- navbar -->
+                </div><!-- collapse -->
+            </div><!-- container -->
+        </nav><!-- nav -->
         <div id="wrapper">
             <div id="map"></div>
         </div>
@@ -20,5 +42,6 @@
 		<script type="text/javascript" src="lib/leaflet-src.js"></script>
 		<!--script type="text/javascript" src="js/main.js"></script!-->
         <script type="text/javascript" src="js/geojson.js"></script>
+        <script type="text/javascript" src="lib/bootstrap.min.js"></script>
 	</body>
 </html>
