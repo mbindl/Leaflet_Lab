@@ -4,7 +4,7 @@
 	
 	#wrapper {
      height: 850px;
-	 width: 2000px;
+	 width: 1500px;
 	 margin: 15px auto;
 	}
 
@@ -14,6 +14,21 @@
     display: inline-block;
 }
 
+    .legend-control-container {
+    width: 150px;
+    height: 100px;
+    background-color: rgba(255,255,255,0.8);
+    padding: 10px;
+    line-height: 10px;
+    text-align: center;
+    border: solid gray 1px;
+    }
+
+    #temporal-legend{
+    font-size: 100%;
+    font-weight: boldr;
+
+}
 
     .sequence-control-container {
     width: 350px;
