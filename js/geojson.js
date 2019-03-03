@@ -30,8 +30,8 @@ function createMap(){
 
 
     var baseMaps = {
-    "Dark": nightTraffic,
-    "Light": dayTraffic
+        "Light": dayTraffic,
+        "Dark": nightTraffic
     };
 
     L.control.layers(baseMaps).addTo(map);
@@ -39,15 +39,21 @@ function createMap(){
     //call getData function
     getData(map);
 };
+// create a number with commas
+function numberWithCommas(x) {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+}
 //Popup constructor function
 function Popup(properties, attribute, layer, radius){
     this.properties = properties;
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute.split("_")[1];
-    this.trips = this.properties[attribute];
-    this.content = "<p><b>Number of Vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
-
+    this.trips = numberWithCommas(this.properties[attribute]);
+    this.content = "<p><b># of vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
+    
     this.bindToLayer = function(){
         this.layer.bindPopup(this.content, {
             offset: new L.Point(0,-radius)
@@ -109,20 +115,19 @@ function createLegend(map, attributes){
             //add temporal legend div to container
             $(container).append('<div id="temporal-legend">')
 
-            //Step 1: start attribute legend svg string
+            //Start attribute legend svg string
             var svg = '<svg id="attribute-legend" width="160px" height="100px">';
 
-            //array of circle names to base loop on
+            //Array of circle names to base loop on
             var circles = {
                 max: 20,
                 mean: 40,
                 min: 60
             };
 
-            //Step 2: loop to add each circle and text to svg string
+            //Loop to add each circle and text to svg string
             for (var circle in circles){
                 //circle string
-
                 svg += '<circle class="legend-circle" id="' + circle + '" fill="#006dad" fill-opacity="0.75" stroke="#000000" cx="30"/>';
 
                 //text string
@@ -169,7 +174,6 @@ function getCircleValues(map, attribute){
 
     //set mean
     var mean = (max + min) / 2;
-
     //return values as an object
     return {
         max: max,
@@ -177,11 +181,7 @@ function getCircleValues(map, attribute){
         min: min
     };
 };
-function numberWithCommas(x) {
-    var parts = x.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
-}
+
 //Update the legend with new attribute
 function updateLegend(map, attribute){
     //create content for legend
@@ -204,8 +204,7 @@ function updateLegend(map, attribute){
       });
 
       //Add legend text
-      $('#'+key+'-text').text(circleValues[key].toFixed(1) + " Vehicles");
-
+      $('#'+key+'-text').text(numberWithCommas(circleValues[key].toFixed(0)) + " vehicles");
     };
 };
 
