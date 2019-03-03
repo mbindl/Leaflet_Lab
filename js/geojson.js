@@ -1,45 +1,52 @@
 //function to instantiate the Leaflet map
 function createMap(){
+    // bounding coordinates
     var southWest = L.latLng(38.5, -120.5),
     northEast = L.latLng(39.5, -119.5),
     bounds = L.latLngBounds(southWest, northEast);
+    
+    // basemaps
+    var dayTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5gn4g22q81fnv7cblmaxo/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>', maxZoom: 18,
+    id: 'mapbox.streets',
+    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
+    })
+    var nightTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5fwla3rva1fqxc3ces51w/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox.streets',
+    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
+    })
     //create the map
     var map = L.map('map', {
         maxBounds: bounds,    
         center: [39.0968, -120.0324],
         zoom: 10,
         maxZoom: 19,
-        minZoom: 8
+        minZoom: 8,
+        layers: [dayTraffic]
     });
 
-    //add base tilelayer - Shoreline Tahoe
-//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjpm66f7x1kf32spdpfdyyxs3/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
-    
-    //add base tilelayer - Day Navigation
-//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5gn4g22q81fnv7cblmaxo/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
 
 
-    //add base tile layer - Night Navigation
-    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5fwla3rva1fqxc3ces51w/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
-    }).addTo(map);
+    var baseMaps = {
+    "Dark": nightTraffic,
+    "Light": dayTraffic
+    };
+
+    L.control.layers(baseMaps).addTo(map);
 
     //call getData function
     getData(map);
 };
-//Example 1.2 line 1...Popup constructor function
+//Popup constructor function
 function Popup(properties, attribute, layer, radius){
     this.properties = properties;
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute.split("_")[1];
     this.population = this.properties[attribute];
-    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " million</p>";
+    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " trips</p>";
 
     this.bindToLayer = function(){
         this.layer.bindPopup(this.content, {
@@ -170,7 +177,11 @@ function getCircleValues(map, attribute){
         min: min
     };
 };
-
+function numberWithCommas(x) {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+}
 //Update the legend with new attribute
 function updateLegend(map, attribute){
     //create content for legend
@@ -182,18 +193,17 @@ function updateLegend(map, attribute){
 
     //get the max, mean, and min values as an object
     var circleValues = getCircleValues(map, attribute);
-
     for (var key in circleValues){
       //get the radius
       var radius = calcPropRadius(circleValues[key]);
 
-      //Step 3: assign the cy and r attributes
+      //Assign the cy and r attributes
       $('#'+key).attr({
           cy: 59 - radius,
           r: radius
       });
 
-      //Step 4: add legend text
+      //Add legend text
       $('#'+key+'-text').text(circleValues[key].toFixed(1) + " Vehicles");
 
     };
@@ -309,7 +319,7 @@ function pointToLayer(feature, latlng, attributes){
     var popup2 = Object.create(popup);
 
     //change the content of popup 2
-    popup2.content = "<h2>" + popup.population + " million</h2>";
+    popup2.content = "<h2>" + popup.population + " trips</h2>";
 
     //add popup to circle marker
     popup2.bindToLayer();
@@ -350,7 +360,6 @@ function getData(map){
             var attributes = processData(response);
             createPropSymbols(response, map, attributes);
             createSequenceControls(map, attributes);
-            
             createLegend(map, attributes);
         }
     });

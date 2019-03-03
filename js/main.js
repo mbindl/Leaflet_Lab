@@ -32,14 +32,14 @@ function createMap(){
     //call getData function
     getData(map);
 };
-//Example 1.2 line 1...Popup constructor function
+//Popup constructor function
 function Popup(properties, attribute, layer, radius){
     this.properties = properties;
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute.split("_")[1];
     this.population = this.properties[attribute];
-    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " million</p>";
+    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " trips</p>";
 
     this.bindToLayer = function(){
         this.layer.bindPopup(this.content, {
@@ -80,7 +80,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
-        if (attribute.indexOf("Pop") > -1){
+        if (attribute.indexOf("yr") > -1){
             attributes.push(attribute);
         };
     };
@@ -170,7 +170,11 @@ function getCircleValues(map, attribute){
         min: min
     };
 };
-
+function numberWithCommas(x) {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+}
 //Update the legend with new attribute
 function updateLegend(map, attribute){
     //create content for legend
@@ -182,18 +186,17 @@ function updateLegend(map, attribute){
 
     //get the max, mean, and min values as an object
     var circleValues = getCircleValues(map, attribute);
-
     for (var key in circleValues){
       //get the radius
       var radius = calcPropRadius(circleValues[key]);
 
-      //Step 3: assign the cy and r attributes
+      //Assign the cy and r attributes
       $('#'+key).attr({
           cy: 59 - radius,
           r: radius
       });
 
-      //Step 4: add legend text
+      //Add legend text
       $('#'+key+'-text').text(circleValues[key].toFixed(1) + " Vehicles");
 
     };
@@ -235,7 +238,7 @@ function createSequenceControls(map, attributes){
     
     // set slider attributes
     $('.range-slider').attr({
-        max: 6,
+        max: 15,
         min: 0,
         value: 0,
         step: 1
@@ -251,11 +254,11 @@ function createSequenceControls(map, attributes){
         if ($(this).attr('id') == 'forward'){
             index++;
             //If past the last attribute, wrap around to first attribute
-            index = index > 6 ? 0 : index;
+            index = index > 15 ? 0 : index;
         } else if ($(this).attr('id') == 'reverse'){
             index--;
             //If past the first attribute, wrap around to last attribute
-            index = index < 0 ? 6 : index;
+            index = index < 0 ? 15 : index;
         };
 
         //Update slider
@@ -272,7 +275,7 @@ function createSequenceControls(map, attributes){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scaleFactor = 50;
+    var scaleFactor = 0.05;
     //area based on attribute value and scale factor
     var area = attValue * scaleFactor;
     //radius calculated based on area
@@ -309,7 +312,7 @@ function pointToLayer(feature, latlng, attributes){
     var popup2 = Object.create(popup);
 
     //change the content of popup 2
-    popup2.content = "<h2>" + popup.population + " million</h2>";
+    popup2.content = "<h2>" + popup.population + " trips</h2>";
 
     //add popup to circle marker
     popup2.bindToLayer();
@@ -342,7 +345,7 @@ function createPropSymbols(data, map, attributes){
 
 //function to retrieve the data and place it on the map
 function getData(map){
-    $.ajax("data/MegaCities.geojson", {
+    $.ajax("data/TahoeTrafficVolumes.geojson", {
         dataType: "json",
         success: function(response){
            
@@ -350,7 +353,6 @@ function getData(map){
             var attributes = processData(response);
             createPropSymbols(response, map, attributes);
             createSequenceControls(map, attributes);
-            
             createLegend(map, attributes);
         }
     });
