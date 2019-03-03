@@ -194,8 +194,13 @@ function pointToLayer(feature, latlng, attributes){
     //create popup
     var popup = new Popup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);
     
-    //add popup
-    popup.bindToLayer();
+    var popup2 = Object.create(popup);
+
+    //change the content of popup 2
+    popup2.content = "<h2>" + popup.population + " million</h2>";
+
+    //add popup to circle marker
+    popup2.bindToLayer();
     
     //event listeners to open popup on hover
     layer.on({

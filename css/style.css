@@ -3,7 +3,7 @@
 	}
 	
 	#wrapper {
-     height: 1000px;
+     height: 960px;
 	 width: 2000px;
 	 margin: 15px auto;
 	}
@@ -17,10 +17,10 @@
 
     .sequence-control-container {
     width: 350px;
-    height: 30px;
+    height: 40px;
     background-color: rgba(255,255,255,0.8);
     padding: 10px;
-    line-height: 45px;
+    line-height: 10px;
     text-align: center;
     border: solid gray 1px;
     }
