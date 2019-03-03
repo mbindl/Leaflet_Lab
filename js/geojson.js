@@ -80,7 +80,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with population values
-        if (attribute.indexOf("Pop") > -1){
+        if (attribute.indexOf("yr") > -1){
             attributes.push(attribute);
         };
     };
@@ -116,7 +116,7 @@ function createLegend(map, attributes){
             for (var circle in circles){
                 //circle string
 
-                svg += '<circle class="legend-circle" id="' + circle + '" fill="#E34132" fill-opacity="0.9" stroke="#000000" cx="30"/>';
+                svg += '<circle class="legend-circle" id="' + circle + '" fill="#006dad" fill-opacity="0.75" stroke="#000000" cx="30"/>';
 
                 //text string
                 svg += '<text id="' + circle + '-text" x="65" y="' + circles[circle] + '"></text>';
@@ -272,7 +272,7 @@ function createSequenceControls(map, attributes){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scaleFactor = 50;
+    var scaleFactor = 0.1;
     //area based on attribute value and scale factor
     var area = attValue * scaleFactor;
     //radius calculated based on area
@@ -342,7 +342,7 @@ function createPropSymbols(data, map, attributes){
 
 //function to retrieve the data and place it on the map
 function getData(map){
-    $.ajax("data/MegaCities.geojson", {
+    $.ajax("data/TahoeTrafficVolumes.geojson", {
         dataType: "json",
         success: function(response){
            
