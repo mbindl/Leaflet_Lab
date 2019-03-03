@@ -6,7 +6,7 @@ function createMap(){
     bounds = L.latLngBounds(southWest, northEast);
     
     // basemaps
-    var dayTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5gn4g22q81fnv7cblmaxo/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    var dayTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5eg0a3s9s1fpc751iydsw/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>', maxZoom: 18,
     id: 'mapbox.streets',
     accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
@@ -186,7 +186,7 @@ function numberWithCommas(x) {
 function updateLegend(map, attribute){
     //create content for legend
     var year = attribute.split("_")[1];
-    var content = "Average Daily Vehicle Trips " + year;
+    var content = "Average Daily Vehicles " + year;
 
     //replace legend content
     $('#temporal-legend').html("<b>" + content + "</b>");
@@ -245,7 +245,7 @@ function createSequenceControls(map, attributes){
     
     // set slider attributes
     $('.range-slider').attr({
-        max: 15,
+        max: 7,
         min: 0,
         value: 0,
         step: 1
@@ -261,11 +261,11 @@ function createSequenceControls(map, attributes){
         if ($(this).attr('id') == 'forward'){
             index++;
             //If past the last attribute, wrap around to first attribute
-            index = index > 15 ? 0 : index;
+            index = index > 7 ? 0 : index;
         } else if ($(this).attr('id') == 'reverse'){
             index--;
             //If past the first attribute, wrap around to last attribute
-            index = index < 0 ? 15 : index;
+            index = index < 0 ? 7 : index;
         };
 
         //Update slider
