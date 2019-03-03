@@ -1,9 +1,15 @@
 //function to instantiate the Leaflet map
 function createMap(){
+    var southWest = L.latLng(38.5, -120.5),
+    northEast = L.latLng(39.5, -119.5),
+    bounds = L.latLngBounds(southWest, northEast);
     //create the map
     var map = L.map('map', {
-        center: [15, 110],
-        zoom: 3
+        maxBounds: bounds,    
+        center: [39.0968, -120.0324],
+        zoom: 10,
+        maxZoom: 19,
+        minZoom: 8
     });
 
     //add base tilelayer
@@ -17,6 +23,22 @@ function createMap(){
     //call getData function
     getData(map);
 };
+
+// Create popup
+function createPopup(properties, attribute, layer, radius){
+    //add city to popup content string
+    var popupContent = "<p><b>City:</b> " + properties.City + "</p>";
+
+    //add formatted attribute to panel content string
+    var year = attribute.split("_")[1];
+    popupContent += "<p><b>Population in " + year + ":</b> " + properties[attribute] + " million</p>";
+
+    //replace the layer popup
+    layer.bindPopup(popupContent, {
+        offset: new L.Point(0,-radius)
+    });
+};
+
 //Resize proportional symbols according to new attribute values
 function updatePropSymbols(map, attribute){
     map.eachLayer(function(layer){
@@ -29,17 +51,8 @@ function updatePropSymbols(map, attribute){
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
 
-            //add city to popup content string
-            var popupContent = "<p><b>City:</b> " + props.City + "</p>";
-
-            //add formatted attribute to panel content string
-            var year = attribute.split("_")[1];
-            popupContent += "<p><b>Population in " + year + ":</b> " + props[attribute] + " million</p>";
-
-            //replace the layer popup
-            layer.bindPopup(popupContent, {
-                offset: new L.Point(0,-radius)
-            });
+            //Example 1.1 line 18...in updatePropSymbols()
+            createPopup(props, attribute, layer, radius);
         };
     });
 };
@@ -64,12 +77,34 @@ function processData(data){
 
 // Create new sequence controls
 function createSequenceControls(map, attributes){
-    //create range input element (slider)
-    $('#panel').append('<input class="range-slider" type="range">');
+    var SequenceControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
 
-    // Add skip buttons
-    $('#panel').append('<button class="skip" id="reverse"></button>');
-    $('#panel').append('<button class="skip" id="forward"></button>');
+        onAdd: function (map) {
+            // create the control container div with a particular class name
+            var container = L.DomUtil.create('div', 'sequence-control-container');
+
+            // ... initialize other DOM elements, add listeners, etc.
+            //create range input element (slider)
+            $(container).append('<input class="range-slider" type="range">');
+
+            //add skip buttons
+            $(container).append('<button class="skip" id="reverse" title="Reverse">Reverse</button>');
+            $(container).append('<button class="skip" id="forward" title="Forward">Skip</button>');
+            //kill any mouse event listeners on the map
+            $(container).on('mousedown dblclick', function(e){
+                L.DomEvent.stopPropagation(e);
+                L.DomEvent.disableClickPropagation(container);
+            });
+            
+            return container;
+        }
+    });
+
+    map.addControl(new SequenceControl());
+
     // replace button content with images
     $('#reverse').html('<img src="img/reverse.png">');
     $('#forward').html('<img src="img/forward.png">');
@@ -128,11 +163,11 @@ function pointToLayer(feature, latlng, attributes){
 
     //create marker options
     var geojsonMarkerOptions = {
-        fillColor: "#ff7800",
+        fillColor: "#006dad",
         color: "#000",
         weight: 1,
         opacity: 1,
-        fillOpacity: 0.8
+        fillOpacity: 0.75
     };
 
     //For each feature, determine its value for the selected attribute
@@ -144,17 +179,8 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, geojsonMarkerOptions);
 
-    //build popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.City + "</p>";
-
-    //add formatted attribute to popup content string
-    var year = attribute.split("_")[1];
-    popupContent += "<p><b>Population in " + year + ":</b> " + feature.properties[attribute] + " million</p>";
-    
-    //bind the popup to the circle marker
-    layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-geojsonMarkerOptions.radius)
-    });
+    //Example 1.1 line 2...in pointToLayer()
+    createPopup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);  
     
     //event listeners to open popup on hover
     layer.on({

@@ -5,15 +5,24 @@ function createMap(){
     bounds = L.latLngBounds(southWest, northEast);
     //create the map
     var map = L.map('map', {
-//        maxBounds: bounds,    
+        maxBounds: bounds,    
         center: [39.0968, -120.0324],
         zoom: 10,
         maxZoom: 19,
         minZoom: 8
     });
 
-    //add base tilelayer
-    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjpm66f7x1kf32spdpfdyyxs3/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    //add base tilelayer - Shoreline Tahoe
+//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjpm66f7x1kf32spdpfdyyxs3/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
+    
+    //add base tilelayer - Day Navigation
+//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5gn4g22q81fnv7cblmaxo/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
+
+
+    //add base tile layer - Night Navigation
+    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5fwla3rva1fqxc3ces51w/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
     maxZoom: 18,
     id: 'mapbox.streets',
@@ -23,21 +32,22 @@ function createMap(){
     //call getData function
     getData(map);
 };
+//Example 1.2 line 1...Popup constructor function
+function Popup(properties, attribute, layer, radius){
+    this.properties = properties;
+    this.attribute = attribute;
+    this.layer = layer;
+    this.year = attribute.split("_")[1];
+    this.population = this.properties[attribute];
+    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " million</p>";
 
-// Create popup
-function createPopup(properties, attribute, layer, radius){
-    //add city to popup content string
-    var popupContent = "<p><b>City:</b> " + properties.City + "</p>";
-
-    //add formatted attribute to panel content string
-    var year = attribute.split("_")[1];
-    popupContent += "<p><b>Population in " + year + ":</b> " + properties[attribute] + " million</p>";
-
-    //replace the layer popup
-    layer.bindPopup(popupContent, {
-        offset: new L.Point(0,-radius)
-    });
+    this.bindToLayer = function(){
+        this.layer.bindPopup(this.content, {
+            offset: new L.Point(0,-radius)
+        });
+    };
 };
+
 
 //Resize proportional symbols according to new attribute values
 function updatePropSymbols(map, attribute){
@@ -51,8 +61,10 @@ function updatePropSymbols(map, attribute){
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
 
-            //Example 1.1 line 18...in updatePropSymbols()
-            createPopup(props, attribute, layer, radius);
+            //create popup
+            var popup = new Popup(props, attribute, layer, radius);
+            //add popup
+            popup.bindToLayer();
         };
     });
 };
@@ -179,8 +191,11 @@ function pointToLayer(feature, latlng, attributes){
     //create circle marker layer
     var layer = L.circleMarker(latlng, geojsonMarkerOptions);
 
-    //Example 1.1 line 2...in pointToLayer()
-    createPopup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);  
+    //create popup
+    var popup = new Popup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);
+    
+    //add popup
+    popup.bindToLayer();
     
     //event listeners to open popup on hover
     layer.on({
