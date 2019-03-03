@@ -45,8 +45,8 @@ function Popup(properties, attribute, layer, radius){
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute.split("_")[1];
-    this.population = this.properties[attribute];
-    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " trips</p>";
+    this.trips = this.properties[attribute];
+    this.content = "<p><b>Number of Vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
 
     this.bindToLayer = function(){
         this.layer.bindPopup(this.content, {
@@ -315,14 +315,9 @@ function pointToLayer(feature, latlng, attributes){
 
     //create popup
     var popup = new Popup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);
-    
-    var popup2 = Object.create(popup);
-
-    //change the content of popup 2
-    popup2.content = "<h2>" + popup.population + " trips</h2>";
 
     //add popup to circle marker
-    popup2.bindToLayer();
+    popup.bindToLayer();
     
     //event listeners to open popup on hover
     layer.on({
