@@ -235,7 +235,7 @@ function createSequenceControls(map, attributes){
     
     // set slider attributes
     $('.range-slider').attr({
-        max: 6,
+        max: 15,
         min: 0,
         value: 0,
         step: 1
@@ -251,11 +251,11 @@ function createSequenceControls(map, attributes){
         if ($(this).attr('id') == 'forward'){
             index++;
             //If past the last attribute, wrap around to first attribute
-            index = index > 6 ? 0 : index;
+            index = index > 15 ? 0 : index;
         } else if ($(this).attr('id') == 'reverse'){
             index--;
             //If past the first attribute, wrap around to last attribute
-            index = index < 0 ? 6 : index;
+            index = index < 0 ? 15 : index;
         };
 
         //Update slider
@@ -272,7 +272,7 @@ function createSequenceControls(map, attributes){
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
-    var scaleFactor = 0.1;
+    var scaleFactor = 0.05;
     //area based on attribute value and scale factor
     var area = attValue * scaleFactor;
     //radius calculated based on area
