@@ -1,46 +1,59 @@
 //function to instantiate the Leaflet map
 function createMap(){
+    // bounding coordinates
     var southWest = L.latLng(38.5, -120.5),
     northEast = L.latLng(39.5, -119.5),
     bounds = L.latLngBounds(southWest, northEast);
+    
+    // basemaps
+    var dayTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5eg0a3s9s1fpc751iydsw/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>', maxZoom: 18,
+    id: 'mapbox.streets',
+    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
+    })
+    var nightTraffic = L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5fwla3rva1fqxc3ces51w/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox.streets',
+    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
+    })
     //create the map
     var map = L.map('map', {
         maxBounds: bounds,    
         center: [39.0968, -120.0324],
         zoom: 10,
         maxZoom: 19,
-        minZoom: 8
+        minZoom: 8,
+        layers: [dayTraffic]
     });
 
-    //add base tilelayer - Shoreline Tahoe
-//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjpm66f7x1kf32spdpfdyyxs3/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
-    
-    //add base tilelayer - Day Navigation
-//    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5gn4g22q81fnv7cblmaxo/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-//    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
 
 
-    //add base tile layer - Night Navigation
-    L.tileLayer('https://api.mapbox.com/styles/v1/mtbindl/cjss5fwla3rva1fqxc3ces51w/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}', {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery   <a href="http://mapbox.com">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoibXRiaW5kbCIsImEiOiJjanMzcXljcXEwNHJkNDlwZno3dWo5a2UxIn0.qynnCUslq3GOpWprfjfDrg'
-    }).addTo(map);
+    var baseMaps = {
+        "Light": dayTraffic,
+        "Dark": nightTraffic
+    };
+
+    L.control.layers(baseMaps).addTo(map);
 
     //call getData function
     getData(map);
 };
+// create a number with commas
+function numberWithCommas(x) {
+    var parts = x.toString().split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+}
 //Popup constructor function
 function Popup(properties, attribute, layer, radius){
     this.properties = properties;
     this.attribute = attribute;
     this.layer = layer;
     this.year = attribute.split("_")[1];
-    this.population = this.properties[attribute];
-    this.content = "<p><b>City:</b> " + this.properties.City + "</p><p><b>Population in " + this.year + ":</b> " + this.population + " trips</p>";
-
+    this.trips = numberWithCommas(this.properties[attribute]);
+    this.content = "<p><b># of vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
+    
     this.bindToLayer = function(){
         this.layer.bindPopup(this.content, {
             offset: new L.Point(0,-radius)
@@ -102,20 +115,19 @@ function createLegend(map, attributes){
             //add temporal legend div to container
             $(container).append('<div id="temporal-legend">')
 
-            //Step 1: start attribute legend svg string
+            //Start attribute legend svg string
             var svg = '<svg id="attribute-legend" width="160px" height="100px">';
 
-            //array of circle names to base loop on
+            //Array of circle names to base loop on
             var circles = {
                 max: 20,
                 mean: 40,
                 min: 60
             };
 
-            //Step 2: loop to add each circle and text to svg string
+            //Loop to add each circle and text to svg string
             for (var circle in circles){
                 //circle string
-
                 svg += '<circle class="legend-circle" id="' + circle + '" fill="#006dad" fill-opacity="0.75" stroke="#000000" cx="30"/>';
 
                 //text string
@@ -162,7 +174,6 @@ function getCircleValues(map, attribute){
 
     //set mean
     var mean = (max + min) / 2;
-
     //return values as an object
     return {
         max: max,
@@ -170,16 +181,12 @@ function getCircleValues(map, attribute){
         min: min
     };
 };
-function numberWithCommas(x) {
-    var parts = x.toString().split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    return parts.join(".");
-}
+
 //Update the legend with new attribute
 function updateLegend(map, attribute){
     //create content for legend
     var year = attribute.split("_")[1];
-    var content = "Average Daily Vehicle Trips " + year;
+    var content = "Average Daily Vehicles " + year;
 
     //replace legend content
     $('#temporal-legend').html("<b>" + content + "</b>");
@@ -197,8 +204,7 @@ function updateLegend(map, attribute){
       });
 
       //Add legend text
-      $('#'+key+'-text').text(circleValues[key].toFixed(1) + " Vehicles");
-
+      $('#'+key+'-text').text(numberWithCommas(circleValues[key].toFixed(0)) + " vehicles");
     };
 };
 
@@ -238,7 +244,7 @@ function createSequenceControls(map, attributes){
     
     // set slider attributes
     $('.range-slider').attr({
-        max: 15,
+        max: 7,
         min: 0,
         value: 0,
         step: 1
@@ -254,11 +260,11 @@ function createSequenceControls(map, attributes){
         if ($(this).attr('id') == 'forward'){
             index++;
             //If past the last attribute, wrap around to first attribute
-            index = index > 15 ? 0 : index;
+            index = index > 7 ? 0 : index;
         } else if ($(this).attr('id') == 'reverse'){
             index--;
             //If past the first attribute, wrap around to last attribute
-            index = index < 0 ? 15 : index;
+            index = index < 0 ? 7 : index;
         };
 
         //Update slider
@@ -308,14 +314,9 @@ function pointToLayer(feature, latlng, attributes){
 
     //create popup
     var popup = new Popup(feature.properties, attribute, layer, geojsonMarkerOptions.radius);
-    
-    var popup2 = Object.create(popup);
-
-    //change the content of popup 2
-    popup2.content = "<h2>" + popup.population + " trips</h2>";
 
     //add popup to circle marker
-    popup2.bindToLayer();
+    popup.bindToLayer();
     
     //event listeners to open popup on hover
     layer.on({

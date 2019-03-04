@@ -34,8 +34,31 @@
                 </div><!-- collapse -->
             </div><!-- container -->
         </nav><!-- nav -->
-        <div id="wrapper">
-            <div id="map"></div>
+        <div class="container-fluid ">
+            <div class="row">
+                <div class="col sidebar no-padding">
+                    <div id="title">
+                       <a>Tahoe Traffic Volumes</a>
+                    </div>
+                    <div id="panel">
+                        <p>Average daily traffic volumes for select intersections.</p>
+                    </div>
+                    <div id = "container">
+                        <nav class='filterbuttons'>
+                            <a href='#' class='active' data-filter='all'>All Count Locations</a>
+                            <a href='#' class ='secondlink' data-filter='low'>&lt; 15,000 vehicles per day</a>
+                            <a href='#' class = 'thirdlink' data-filter='medium'>&gt; 15,000 vehicles per day</a>
+                            <a href='#' data-filter='high'>&gt; 30,000 vehicles per day</a>
+                        </nav>
+                    </div>
+                    <div id="cars">
+                        <img src="img/traffic.svg"/>
+                    </div>
+                </div>
+                <div class="col text-center no-padding">
+                    <div id="map"></div>
+                </div>
+            </div>
         </div>
 		<!--scripts-->
 		<script type="text/javascript" src="js/jquery-3.3.1.js"></script>
