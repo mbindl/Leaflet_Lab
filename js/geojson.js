@@ -27,24 +27,23 @@ function createMap(){
         layers: [dayTraffic]
     });
 
-
-
     var baseMaps = {
         "Light": dayTraffic,
         "Dark": nightTraffic
     };
-
     L.control.layers(baseMaps).addTo(map);
 
     //call getData function
     getData(map);
 };
+
 // create a number with commas
 function numberWithCommas(x) {
     var parts = x.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return parts.join(".");
 }
+
 //Popup constructor function
 function Popup(properties, attribute, layer, radius){
     this.properties = properties;
@@ -60,7 +59,6 @@ function Popup(properties, attribute, layer, radius){
         });
     };
 };
-
 
 //Resize proportional symbols according to new attribute values
 function updatePropSymbols(map, attribute){
@@ -82,6 +80,7 @@ function updatePropSymbols(map, attribute){
     });
     updateLegend(map,attribute)
 };
+
 //Build an attributes array from the data
 function processData(data){
     //empty array to hold attributes
@@ -278,6 +277,7 @@ function createSequenceControls(map, attributes){
         updatePropSymbols(map, attributes[index]);
     });
 };
+
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
     //scale factor to adjust symbol size evenly
