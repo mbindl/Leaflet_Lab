@@ -410,7 +410,7 @@ function createPropSymbols(data, map, idx, filterStr) {
             // Build popup content string
             var popupContent = ""
             var year = attribute.slice(-4)
-            popupContent += "<p><b>" + details[0] + " in " + year + ":</b> " + numberWithCommas(feature.properties[attribute]) + details[1] + "</p>"
+            popupContent += "<p><b>" + details[0] + " in " + year + "(daily average):</b> " + numberWithCommas(feature.properties[attribute]) + details[1] + "</p>"
 
             // Bind the popup to the circle marker
             layer.bindPopup(popupContent, {
@@ -446,7 +446,7 @@ function createPropSymbols(data, map, idx, filterStr) {
                     returnBool = true
                 }
             } else if (filterStr === 'medium'){
-                if ((feature.properties[currentAttribute] <= 30000) && (feature.properties[currentAttribute] > 15000)) {
+                if ((feature.properties[currentAttribute] > 15000)) {
                     returnBool = true
                 }
             } else if (filterStr === 'low'){
