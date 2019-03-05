@@ -1,3 +1,14 @@
+// Global Variables
+// empty variable to update the map with
+var currentMap = 0;
+// Initialize global variables for use later
+var currentLayer = 0; // holds geoJsonLayer for future modifications
+var currentAttributes = 0; // Visitor attribute names
+var currentFilter = 'all'; // current Filter selection, initially 'all'
+var rawJson = 0; // holds ajax response, aka raw json data
+var featureSelected = 0; // holds the currently selected park information
+var currentAttribute = 0; // holds the currently selected visitor attribute name
+
 //function to instantiate the Leaflet map
 function createMap(){
     // bounding coordinates
@@ -27,16 +38,20 @@ function createMap(){
         layers: [dayTraffic]
     });
 
+
+
     var baseMaps = {
         "Light": dayTraffic,
         "Dark": nightTraffic
     };
-    L.control.layers(baseMaps).addTo(map);
 
+    L.control.layers(baseMaps).addTo(map);
+    
+    currentMap = map
+    
     //call getData function
     getData(map);
 };
-
 // create a number with commas
 function numberWithCommas(x) {
     var parts = x.toString().split(".");
@@ -44,59 +59,37 @@ function numberWithCommas(x) {
     return parts.join(".");
 }
 
-//Popup constructor function
-function Popup(properties, attribute, layer, radius){
-    this.properties = properties;
-    this.attribute = attribute;
-    this.layer = layer;
-    this.year = attribute.split("_")[1];
-    this.trips = numberWithCommas(this.properties[attribute]);
-    this.content = "<p><b># of vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
-    
-    this.bindToLayer = function(){
-        this.layer.bindPopup(this.content, {
-            offset: new L.Point(0,-radius)
-        });
-    };
-};
+////Popup constructor function
+//function Popup(properties, attribute, layer, radius){
+//    this.properties = properties;
+//    this.attribute = attribute;
+//    this.layer = layer;
+//    this.year = attribute.split("_")[1];
+//    this.trips = numberWithCommas(this.properties[attribute]);
+//    this.content = "<p><b># of vehicles \(daily average)\ in " + this.year + ":</b> " + this.trips + "</p>";
+//    
+//    this.bindToLayer = function(){
+//        this.layer.bindPopup(this.content, {
+//            offset: new L.Point(0,-radius)
+//        });
+//    };
+//};
 
-//Resize proportional symbols according to new attribute values
-function updatePropSymbols(map, attribute){
-    map.eachLayer(function(layer){
-        //
-        if (layer.feature && layer.feature.properties[attribute]){
-            //access feature properties
-            var props = layer.feature.properties;
-
-            //update each feature's radius based on new attribute values
-            var radius = calcPropRadius(props[attribute]);
-            layer.setRadius(radius);
-
-            //create popup
-            var popup = new Popup(props, attribute, layer, radius);
-            //add popup
-            popup.bindToLayer();
-        };
-    });
-    updateLegend(map,attribute)
-};
 
 //Build an attributes array from the data
 function processData(data){
-    //empty array to hold attributes
+    // Empty arrays to hold attributes
     var attributes = [];
-
-    //properties of the first feature in the dataset
+    // Properties of the first feature in the dataset
     var properties = data.features[0].properties;
-
-    //push each attribute name into attributes array
+    // Push each attribute name into attributes array
     for (var attribute in properties){
-        //only take attributes with population values
+        //catalog attributes with year values
         if (attribute.indexOf("yr") > -1){
-            attributes.push(attribute);
-        };
+            attributes.push(attribute)
+        }
     };
-    return attributes;
+    return [attributes];
 };
 
 // Create Legend
@@ -144,8 +137,6 @@ function createLegend(map, attributes){
     });
 
     map.addControl(new LegendControl());
-
-    updateLegend(map, attributes[0]);
 };
 
 //Calculate the max, mean, and min values for a given attribute
@@ -194,7 +185,7 @@ function updateLegend(map, attribute){
     var circleValues = getCircleValues(map, attribute);
     for (var key in circleValues){
       //get the radius
-      var radius = calcPropRadius(circleValues[key]);
+      var radius = calcPropRadius(circleValues[key], 0.075);
 
       //Assign the cy and r attributes
       $('#'+key).attr({
@@ -266,17 +257,65 @@ function createSequenceControls(map, attributes){
             index = index < 0 ? 7 : index;
         };
 
-        //Update slider
+   // Update slider after arrow click
         $('.range-slider').val(index);
-        updatePropSymbols(map, attributes[index]);
+        
+        // Rebuild layer as total values may have changed during time sequence
+        currentMap.removeLayer(geoJsonLayer);
+        geoJsonLayer = createPropSymbols(rawJson, currentMap, index, currentFilter);
+        currentLayer = geoJsonLayer;
+        currentMap.addLayer(geoJsonLayer);
+        
+        // Reset current attributes and update the info panel
+        currentAttribute = currentAttributes[index];
+        
+        // Update legend title with new year
+        $('#legendTitle').text("Visitors in " + currentAttribute.split("_")[1]);
+        updateLegend(map, currentAttribute);
     });
-    //input listener for slider
+
+    // Input listener for slider
     $('.range-slider').on('input', function(){
-        //Get the new index value
+        // Get the new index value
         var index = $(this).val();
-        updatePropSymbols(map, attributes[index]);
+        
+        // Rebuild layer as population values may have changed during time sequence
+        currentMap.removeLayer(geoJsonLayer);
+        geoJsonLayer = createPropSymbols(rawJson, currentMap, index, currentFilter);
+        currentLayer = geoJsonLayer;
+        currentMap.addLayer(geoJsonLayer);
+        
+        // Reset current attributes and update the info panel
+        currentAttribute = attributes[index];
+        updatePanel();
+        
+        // Update legend title with new year
+        $('#legendTitle').text("Visitors in " + currentAttribute.split("_")[1]);
+        updateLegend(map, currentAttribute);
     });
 };
+
+// Click listener for the filter menu
+$('.filterbuttons a').on('click', function() {
+    // For each filter link, get the 'data-filter' attribute value.
+    var filter = $(this).data('filter');
+    
+    // Set global variable for future use
+    currentFilter = filter;
+    
+    // Change which filter menu option is active, get slider index
+    $(this).addClass('active').siblings().removeClass('active');
+    var currentIdx = $('.range-slider').val();
+    
+    // Remove current map layer, create new one with appropriate filter
+    currentMap.removeLayer(geoJsonLayer);
+    geoJsonLayer = createPropSymbols(rawJson, currentMap, currentIdx, filter);
+    currentLayer = geoJsonLayer;
+    
+    // Add new layer to map, wipe away the info panel
+    currentMap.addLayer(geoJsonLayer);
+    updateLegend(currentMap, currentAttribute);
+});
 
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
@@ -307,7 +346,7 @@ function pointToLayer(feature, latlng, attributes){
     var attValue = Number(feature.properties[attribute]);
 
     //Give each feature's circle marker a radius based on its attribute value
-    geojsonMarkerOptions.radius = calcPropRadius(attValue);
+    geoJsonOptions.radius = calcPropRadius(attValue);
 
     //create circle marker layer
     var layer = L.circleMarker(latlng, geojsonMarkerOptions);
@@ -335,27 +374,131 @@ function pointToLayer(feature, latlng, attributes){
 };
 
 // Add circle markers for point features to the map
-function createPropSymbols(data, map, attributes){
-    //create a Leaflet GeoJSON layer and add it to the map
-    L.geoJson(data, {
-        pointToLayer: function(feature, latlng){
-            return pointToLayer(feature, latlng, attributes);
+function createPropSymbols(data, map, idx, filterStr) {
+    
+    // Get and store current attributes based on index (idx)
+    var attribute = currentAttributes[idx]
+    currentAttribute = attribute
+    
+    // Create marker options
+    var geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#006dad",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.6
+    }
+    
+    var geoJsonOptions = {
+        pointToLayer: function (feature, latlng){
+            
+            // For each feature, determine its value for the selected attribute
+            var attValue = Number(feature.properties[attribute])
+            
+            // Test for variable type, then give each feature's circle marker a radius based on its attribute value 
+            // This code was written in hopes of adding a switch to flip to population as the main variable on the map
+            var strTest = attribute.search("yr")
+            if (strTest > -1) {
+                geojsonMarkerOptions.radius = calcPropRadius(attValue, 0.1)
+                details = ["Vehicles", ""]   
+            }
+            
+            // Create circle marker layer
+            var layer = L.circleMarker(latlng, geojsonMarkerOptions)
+            
+            // Build popup content string
+            var popupContent = ""
+            var year = attribute.slice(-4)
+            popupContent += "<p><b>" + details[0] + " in " + year + ":</b> " + numberWithCommas(feature.properties[attribute]) + details[1] + "</p>"
+
+            // Bind the popup to the circle marker
+            layer.bindPopup(popupContent, {
+                offset: new L.Point(0, -geojsonMarkerOptions.radius),
+                closeButton: false
+            })
+            
+            // Event listeners to open popup on hover, update the info panel on click and
+            // Add clicked feature to global variable for future use
+            layer.on({
+                mouseover: function(){
+                    this.openPopup()
+                },
+                mouseout: function(){
+                    this.closePopup()
+                },
+                click: function(){
+                    featureSelected = feature
+                    updatePanel(currentAttribute, details)
+                }
+            })
+
+            return layer;
+        },
+        filter: function(feature, layer) { // Add filter function for new geoJsonLayer
+            // If the data-filter attribute is set to "all", return all (true)
+            // Otherwise, filter markers based on population size
+            var returnBool = false
+            if (filterStr === 'all'){
+                returnBool = true
+            } else if (filterStr === 'high'){
+                if (feature.properties[currentAttribute] > 30000) {
+                    returnBool = true
+                }
+            } else if (filterStr === 'medium'){
+                if ((feature.properties[currentAttribute] <= 30000) && (feature.properties[currentAttribute] > 15000)) {
+                    returnBool = true
+                }
+            } else if (filterStr === 'low'){
+                if ((feature.properties[currentAttribute] <= 15000)) {
+                    returnBool = true
+                }
+            } 
+            return returnBool
         }
-    }).addTo(map);
+    };
+    
+    // Create a Leaflet GeoJSON layer, based on rawJson data and previously defined geoJsonOptions
+    var geoJsonLayer = L.geoJson(data, geoJsonOptions)
+    
+    return geoJsonLayer    
 };
 
+// Calculate the radius of each proportional symbol
+function calcPropRadius(attValue, scaleFactor) {
+
+    // Area based on attribute value and scale factor
+    var area = attValue * scaleFactor
+
+    // Radius calculated based on area
+    var radius = Math.sqrt(area/Math.PI)
+
+    return radius
+}
 //function to retrieve the data and place it on the map
 function getData(map){
     $.ajax("data/TahoeTrafficVolumes.geojson", {
         dataType: "json",
         success: function(response){
-           
-           //create an attributes array
-            var attributes = processData(response);
-            createPropSymbols(response, map, attributes);
-            createSequenceControls(map, attributes);
-            createLegend(map, attributes);
+       // Set global rawJson to ajax response
+            rawJson = response;
+            // Process rawJson/response into lists of data sets- Percentage and Population
+            var processedAttributes = processData(response);
+            currentAttributes = processedAttributes[0];
+            // Call function to create proportional symbols, put in a layer
+            geoJsonLayer = createPropSymbols(response, map, 0, currentFilter);
+            currentLayer = geoJsonLayer;
+            // Call function to create sequence controls for user
+            createSequenceControls(map, currentAttributes);
+                    
+            //add geo JSON layer to map
+            map.addLayer(geoJsonLayer);
+            
+            // call function to create proportional symbol legend, must be called AFTER the above addLayer is called so that a layer already exists!
+            createLegend(map, currentAttributes);
+            updateLegend(map, currentAttributes[0]);
         }
-    });
+    })
 };
+    
 $(document).ready(createMap);
