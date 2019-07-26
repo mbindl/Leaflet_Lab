@@ -52,7 +52,7 @@
     text-align: center;
     background-color: lightgrey;
     width: 100%;
-    height: 17vh;
+    height: 20vh;
     padding-right:1%;
     padding-top: 4vh;
     display: inline-block;
@@ -65,7 +65,7 @@
 
     #panel {
     width: 100%;
-    height: 17vh;
+    height: 16vh;
     padding-right:1%;
     padding-top: 4vh;
     display: inline-block;
@@ -143,8 +143,7 @@
     }
 
     #cars img {
-    width: 80%;
-    height: 80%;
+    width: 75%;
     }
 
     .legend-control-container {
@@ -163,7 +162,7 @@
     }
 
     .sequence-control-container {
-    width: 350px;
+    width: 290px;
     height: 40px;
     background-color: rgba(255,255,255,0.8);
     padding: 10px;
@@ -173,7 +172,7 @@
     }
 
     .range-slider {
-    width: 200px;
+    width: 175px;
     }
 
     #forward {
